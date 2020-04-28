@@ -171,7 +171,7 @@ def main():
 
         # evaluate on validation set
         prec1 = validate(val_loader, model, criterion)
-        history_score[epoch] = prec1
+        history_score[epoch] = prec1.cpu()
         np.savetxt(os.path.join(args.save, 'record.txt'), history_score, fmt = '%10.5f', delimiter=',')
 
         # remember best prec@1 and save checkpoint
@@ -185,7 +185,7 @@ def main():
             'optimizer' : optimizer.state_dict(),
         }, is_best, args.save)
 
-    history_score[-1] = best_prec1
+    history_score[-1] = best_prec1.cpu()
     np.savetxt(os.path.join(args.save, 'record.txt'), history_score, fmt = '%10.5f', delimiter=',')
 
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -213,7 +213,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input.size(0))
+        losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
         top5.update(prec5[0], input.size(0))
 
@@ -257,7 +257,7 @@ def validate(val_loader, model, criterion):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input.size(0))
+        losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
         top5.update(prec5[0], input.size(0))
 
