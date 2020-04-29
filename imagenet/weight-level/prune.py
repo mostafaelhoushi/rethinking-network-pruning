@@ -87,7 +87,7 @@ def main():
                       'disable data parallelism.')
 
     if not os.path.exists(args.save):
-        os.mkdir(args.save)
+        os.makedirs(args.save)
 
     args.distributed = args.world_size > 1
 
