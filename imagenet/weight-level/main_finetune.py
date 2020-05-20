@@ -75,6 +75,8 @@ parser.add_argument('--freeze-gamma', dest='freeze_gamma', action='store_true',
                     help='freeze gamma of batchnorm layers')
 parser.add_argument('--freeze-beta', dest='freeze_beta', action='store_true', 
                     help='freeze beta of batchnorm layers')
+parser.add_argument('--no-backward-pass', dest='no_backward_pass', action='store_true',
+                    help='only do forward pass during training to update running mean and var of batchnorm layers')
 
 best_prec1 = 0
 
@@ -258,17 +260,19 @@ def train(train_loader, model, criterion, optimizer, epoch):
         top5.update(prec5[0], input.size(0))
 
         # compute gradient and do SGD step
-        optimizer.zero_grad()
-        loss.backward()
+        if args.no_backward_pass is False:
+            optimizer.zero_grad()
+            loss.backward()
 
-        for k, m in enumerate(model.modules()):
-            # print(k, m)
-            if isinstance(m, nn.Conv2d):
-                weight_copy = m.weight.data.abs().clone()
-                mask = weight_copy.gt(0).float().cuda()
-                m.weight.grad.data.mul_(mask)
+            for k, m in enumerate(model.modules()):
+                # print(k, m)
+                if isinstance(m, nn.Conv2d):
+                    if m.weight.grad is not None:
+                        weight_copy = m.weight.data.abs().clone()
+                        mask = weight_copy.gt(0).float().cuda()
+                        m.weight.grad.data.mul_(mask)
 
-        optimizer.step()
+            optimizer.step()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
